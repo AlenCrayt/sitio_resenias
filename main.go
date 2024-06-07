@@ -1,0 +1,79 @@
+package main
+
+import (
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"strconv"
+
+	"github.com/go-sql-driver/mysql"
+)
+
+func main() {
+	//Abrimos una conexion a la base de datos e ingresamos con un usuario
+	sign_in := mysql.Config{
+		User:                 "test",
+		Passwd:               "1234",
+		AllowNativePasswords: true,
+		DBName:               "sitio_resenias",
+		Net:                  "tcp",
+		Addr:                 "127.0.0.1",
+	}
+	base_datos, err := sql.Open("mysql", sign_in.FormatDSN())
+	if err != nil {
+		log.Fatal(err)
+	}
+	error_conexion := base_datos.Ping()
+	if error_conexion != nil {
+		log.Fatal(error_conexion)
+	}
+	fmt.Println("Conexion con base de datos establecida")
+
+	http.HandleFunc("api/leer_resenias", func(w http.ResponseWriter, r *http.Request) {
+		leer_resenias(w, base_datos)
+	})
+	http.HandleFunc("api/agregar_resenias", func(w http.ResponseWriter, r *http.Request) {
+		agregar_resenia(w, r, base_datos)
+	})
+
+	pagina := http.FileServer(http.Dir("./webpage"))
+	http.Handle("/", pagina)
+
+	http.ListenAndServe(":8080", nil)
+}
+
+func leer_resenias(respuesta http.ResponseWriter, bd *sql.DB) {
+	type resenia struct {
+		ID          int    `json:"id"`
+		Titulo      string `json:"titulo"`
+		Parrafo     string `json:"parrafo"`
+		Link_Imagen string `json:"link_imagen"`
+	}
+	var lista_resenias []resenia
+	resenias_bd, _ := bd.Query("SELECT * FROM resenias LIMIT 25")
+	for resenias_bd.Next() {
+		var temp_resenia resenia
+		err := resenias_bd.Scan(&temp_resenia.ID, &temp_resenia.Titulo, &temp_resenia.Parrafo, &temp_resenia.Link_Imagen)
+		if err != nil {
+			fmt.Println(err)
+		}
+		lista_resenias = append(lista_resenias, temp_resenia)
+	}
+	respuesta.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(respuesta).Encode(lista_resenias)
+}
+
+func agregar_resenia(respuesta http.ResponseWriter, pedido *http.Request, bd *sql.DB) {
+	titulo := pedido.URL.Query().Get("tit")
+	parrafo := pedido.URL.Query().Get("prf")
+	link_imagen := pedido.URL.Query().Get("img")
+	id, err := bd.Exec("INSERT INTO resenias (Titulo, Parrafo, Imagen) VALUES(?, ?, ?)", titulo, parrafo, link_imagen)
+	if err != nil {
+		fmt.Println(nil)
+	}
+	id_usable, _ := id.LastInsertId()
+	texto_id := strconv.Itoa(int(id_usable))
+	respuesta.Write([]byte(texto_id))
+}
