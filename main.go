@@ -14,7 +14,7 @@ import (
 func main() {
 	//Abrimos una conexion a la base de datos e ingresamos con un usuario
 	sign_in := mysql.Config{
-		User:                 "test",
+		User:                 "Test",
 		Passwd:               "1234",
 		AllowNativePasswords: true,
 		DBName:               "sitio_resenias",
@@ -31,20 +31,21 @@ func main() {
 	}
 	fmt.Println("Conexion con base de datos establecida")
 
-	http.HandleFunc("api/leer_resenias", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/leer_resenias", func(w http.ResponseWriter, r *http.Request) {
 		leer_resenias(w, base_datos)
 	})
-	http.HandleFunc("api/agregar_resenias", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/agregar_resenias", func(w http.ResponseWriter, r *http.Request) {
 		agregar_resenia(w, r, base_datos)
 	})
 
-	pagina := http.FileServer(http.Dir("./webpage"))
+	pagina := http.FileServer(http.Dir("./pagina_web"))
 	http.Handle("/", pagina)
 
 	http.ListenAndServe(":8080", nil)
 }
 
 func leer_resenias(respuesta http.ResponseWriter, bd *sql.DB) {
+	fmt.Println("se llama a leer reseñas")
 	type resenia struct {
 		ID          int    `json:"id"`
 		Titulo      string `json:"titulo"`
@@ -66,9 +67,10 @@ func leer_resenias(respuesta http.ResponseWriter, bd *sql.DB) {
 }
 
 func agregar_resenia(respuesta http.ResponseWriter, pedido *http.Request, bd *sql.DB) {
-	titulo := pedido.URL.Query().Get("tit")
-	parrafo := pedido.URL.Query().Get("prf")
-	link_imagen := pedido.URL.Query().Get("img")
+	fmt.Println("se esta agregando una reseña")
+	titulo := pedido.FormValue("titulo")
+	parrafo := pedido.FormValue("parrafo")
+	link_imagen := pedido.FormValue("link_img")
 	id, err := bd.Exec("INSERT INTO resenias (Titulo, Parrafo, Imagen) VALUES(?, ?, ?)", titulo, parrafo, link_imagen)
 	if err != nil {
 		fmt.Println(nil)
