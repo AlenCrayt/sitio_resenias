@@ -79,3 +79,15 @@ func agregar_resenia(respuesta http.ResponseWriter, pedido *http.Request, bd *sq
 	texto_id := strconv.Itoa(int(id_usable))
 	respuesta.Write([]byte(texto_id))
 }
+
+/*
+Voy a tener que averiguar como obtener un ID a base de un simple click en una reseña
+para borrarla o actualizarla y poder acceder a las propiedades de esta en la base de datos
+*/
+func actualizar_resenia(bd *sql.DB) {
+	fmt.Println("se esta actualizando una reseña")
+}
+
+func borrar_resenia(bd *sql.DB) {
+	fmt.Println("se esta eliminando una reseña")
+}
