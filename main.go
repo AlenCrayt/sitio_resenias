@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	//Abrimos una conexion a la base de datos e ingresamos con un usuario
+	//Abrimos una conexión a la base de datos e ingresamos con un usuario
 	sign_in := mysql.Config{
 		User:                 "Test",
 		Passwd:               "1234",
@@ -29,13 +29,16 @@ func main() {
 	if error_conexion != nil {
 		log.Fatal(error_conexion)
 	}
-	fmt.Println("Conexion con base de datos establecida")
+	fmt.Println("Conexión con base de datos establecida")
 
 	http.HandleFunc("/leer_resenias", func(w http.ResponseWriter, r *http.Request) {
 		leer_resenias(w, base_datos)
 	})
 	http.HandleFunc("/agregar_resenias", func(w http.ResponseWriter, r *http.Request) {
 		agregar_resenia(w, r, base_datos)
+	})
+	http.HandleFunc("/registrar", func(w http.ResponseWriter, r *http.Request) {
+		registrar_usuario(r, base_datos)
 	})
 
 	pagina := http.FileServer(http.Dir("./pagina_web"))
@@ -73,7 +76,7 @@ func agregar_resenia(respuesta http.ResponseWriter, pedido *http.Request, bd *sq
 	link_imagen := pedido.FormValue("link_img")
 	id, err := bd.Exec("INSERT INTO resenias (Titulo, Parrafo, Imagen) VALUES(?, ?, ?)", titulo, parrafo, link_imagen)
 	if err != nil {
-		fmt.Println(nil)
+		fmt.Println(err)
 	}
 	id_usable, _ := id.LastInsertId()
 	texto_id := strconv.Itoa(int(id_usable))
@@ -81,8 +84,9 @@ func agregar_resenia(respuesta http.ResponseWriter, pedido *http.Request, bd *sq
 }
 
 /*
-Voy a tener que averiguar como obtener un ID a base de un simple click en una reseña
-para borrarla o actualizarla y poder acceder a las propiedades de esta en la base de datos
+Se va a necesitar una extension extensiva del código para poder manejar creación y autenticación de usuarios y vincular a esos usuarios
+a reseñas especificas en las que van a tener permisos para actualizarlas o borrarlas
+Va a haber que tener dos tablas vinculadas una de usuarios y una de reseñas
 */
 func actualizar_resenia(bd *sql.DB) {
 	fmt.Println("se esta actualizando una reseña")
@@ -90,4 +94,22 @@ func actualizar_resenia(bd *sql.DB) {
 
 func borrar_resenia(bd *sql.DB) {
 	fmt.Println("se esta eliminando una reseña")
+}
+
+func buscar_resenia(bd *sql.DB) {
+	fmt.Println("buscando reseña")
+}
+
+func registrar_usuario(pedido *http.Request, bd *sql.DB) {
+	fmt.Println("Registrando usuario nuevo")
+	nombre_a_registrar := pedido.FormValue("registro_nombre")
+	contrasenia_a_registrar := pedido.FormValue("registro_contrasenia")
+	_, err := bd.Exec("INSERT INTO usuarios (nombre_usuario, contrasenia) VALUES(?, ?)", nombre_a_registrar, contrasenia_a_registrar)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func ingresar_usuario(bd *sql.DB) {
+	fmt.Println("Un usuario esta ingresando")
 }
