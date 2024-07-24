@@ -43,10 +43,6 @@ func main() {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		buscar_resenia(w, r, base_datos)
 	})
-	http.HandleFunc("/usuarios-nuevos", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		registrar_usuario(r, base_datos)
-	})
 
 	//pagina := http.FileServer(http.Dir("./pagina_web"))
 	//http.Handle("/", pagina)
@@ -95,22 +91,6 @@ Se va a necesitar una extension extensiva del código para poder manejar creaci�
 a reseñas especificas en las que van a tener permisos para actualizarlas o borrarlas
 Va a haber que tener dos tablas vinculadas una de usuarios y una de reseñas
 */
-func actualizar_resenia(pedido *http.Request, bd *sql.DB) {
-	//Como obtener el ID de una reseña en el frontend?
-	fmt.Println("se esta actualizando una reseña")
-	titulo := pedido.FormValue("titulo")
-	parrafo := pedido.FormValue("parrafo")
-	link_imagen := pedido.FormValue("link_img")
-	//Necesito saber que partes de la reseña estan siendo actualizada? O podria recibir todos los datos incluso aquellos que no son actualizados
-	_, err := bd.Exec("UPDATE resenias SET Titulo = ?, Parrafo = ?, Imagen = ? WHERE ID = ?", titulo, parrafo, link_imagen)
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-func borrar_resenia(pedido *http.Request, bd *sql.DB) {
-	fmt.Println("se esta eliminando una reseña")
-}
 
 func buscar_resenia(respuesta http.ResponseWriter, pedido *http.Request, bd *sql.DB) {
 	type resenia struct {
@@ -137,18 +117,4 @@ func buscar_resenia(respuesta http.ResponseWriter, pedido *http.Request, bd *sql
 	}
 	respuesta.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(respuesta).Encode(lista_resenias)
-}
-
-func registrar_usuario(pedido *http.Request, bd *sql.DB) {
-	fmt.Println("Registrando usuario nuevo")
-	nombre_a_registrar := pedido.FormValue("registro_nombre")
-	contrasenia_a_registrar := pedido.FormValue("registro_contrasenia")
-	_, err := bd.Exec("INSERT INTO usuarios (nombre_usuario, contrasenia) VALUES(?, ?)", nombre_a_registrar, contrasenia_a_registrar)
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-func ingresar_usuario(pedido *http.Request, bd *sql.DB) {
-	fmt.Println("Un usuario esta ingresando")
 }
