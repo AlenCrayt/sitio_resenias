@@ -4,12 +4,20 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/go-sql-driver/mysql"
 )
+
+type resenia struct {
+	ID          int    `json:"id"`
+	Titulo      string `json:"titulo_libro"`
+	Parrafo     string `json:"resenia_parrafo"`
+	Link_Imagen string `json:"link_portada"`
+}
 
 func main() {
 	//Abrimos una conexión a la base de datos e ingresamos con un usuario
@@ -37,7 +45,11 @@ func main() {
 	})
 	http.HandleFunc("/resenias-nuevas", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		agregar_resenia(w, r, base_datos)
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		//Usamos un condicional para ejecutar la funcion de agregar Reseñas solo si recibimos un pedido de metodo POST a esta URL
+		if (r.Method == "POST") {
+			agregar_resenia(w, r, base_datos)
+		}
 	})
 	http.HandleFunc("/resenias-especificas", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -52,12 +64,6 @@ func main() {
 
 func leer_resenias(respuesta http.ResponseWriter, bd *sql.DB) {
 	fmt.Println("se llama a leer reseñas")
-	type resenia struct {
-		ID          int    `json:"id"`
-		Titulo      string `json:"titulo"`
-		Parrafo     string `json:"parrafo"`
-		Link_Imagen string `json:"link_imagen"`
-	}
 	var lista_resenias []resenia
 	resenias_bd, _ := bd.Query("SELECT * FROM resenias LIMIT 25")
 	for resenias_bd.Next() {
@@ -73,11 +79,18 @@ func leer_resenias(respuesta http.ResponseWriter, bd *sql.DB) {
 }
 
 func agregar_resenia(respuesta http.ResponseWriter, pedido *http.Request, bd *sql.DB) {
+	var resenia_subida resenia
+
 	fmt.Println("se esta agregando una reseña")
-	titulo := pedido.FormValue("titulo")
-	parrafo := pedido.FormValue("parrafo")
-	link_imagen := pedido.FormValue("link_img")
-	id, err := bd.Exec("INSERT INTO resenias (titulo_libro, parrafo, link_imagen) VALUES(?, ?, ?)", titulo, parrafo, link_imagen)
+
+	datos_recibidos, err := io.ReadAll(pedido.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer pedido.Body.Close()
+
+	json.Unmarshal(datos_recibidos, &resenia_subida)
+	id, err := bd.Exec("INSERT INTO resenias (titulo_libro, parrafo_resenia, link_img_portada) VALUES(?, ?, ?)", resenia_subida.Titulo, resenia_subida.Parrafo, resenia_subida.Link_Imagen)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -93,12 +106,6 @@ Va a haber que tener dos tablas vinculadas una de usuarios y una de reseñas
 */
 
 func buscar_resenia(respuesta http.ResponseWriter, pedido *http.Request, bd *sql.DB) {
-	type resenia struct {
-		ID          int    `json:"id"`
-		Titulo      string `json:"titulo"`
-		Parrafo     string `json:"parrafo"`
-		Link_Imagen string `json:"link_imagen"`
-	}
 	var lista_resenias []resenia
 	fmt.Println("buscando reseña")
 	busqueda := pedido.URL.Query().Get("buscar-titulo")
