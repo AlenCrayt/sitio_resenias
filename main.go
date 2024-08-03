@@ -54,7 +54,7 @@ func main() {
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")*/
 		//Usamos un condicional para ejecutar la función de agregar Reseñas solo si recibimos un pedido de método POST a esta URL
 		if (r.Method == "POST") {
-			agregar_resenia(w, r, base_datos)
+			agregar_resenia(r, base_datos)
 		}
 	})
 	http.HandleFunc("/resenias-especificas", func(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +109,7 @@ func leer_resenias(respuesta http.ResponseWriter, pedido *http.Request , bd *sql
 	json.NewEncoder(respuesta).Encode(lista_resenias)
 }
 
-func agregar_resenia(respuesta http.ResponseWriter, pedido *http.Request, bd *sql.DB) {
+func agregar_resenia(pedido *http.Request, bd *sql.DB) {
 	fmt.Println("se esta agregando una reseña")
 
 	//Usamos una variable de tipo reseña para tener temporalmente los datos decodificados del paquete JSON enviado por el cliente
