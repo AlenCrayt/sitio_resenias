@@ -46,24 +46,24 @@ func main() {
 	Paquete HTTP tienen adentro suyo a otra tres funciones propias que permiten agregar el puntero a la base de datos como parámetro*/
 	http.HandleFunc("/resenias-generales", func(w http.ResponseWriter, r *http.Request) {
 		//Los pedidos de otros orígenes solo están activados durante el desarrollo de la pagina
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		//w.Header().Set("Access-Control-Allow-Origin", "*")
 		leer_resenias(w, r, base_datos)
 	})
 	http.HandleFunc("/resenias-nuevas", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		/*w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")*/
 		//Usamos un condicional para ejecutar la función de agregar Reseñas solo si recibimos un pedido de método POST a esta URL
 		if (r.Method == "POST") {
 			agregar_resenia(w, r, base_datos)
 		}
 	})
 	http.HandleFunc("/resenias-especificas", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		//w.Header().Set("Access-Control-Allow-Origin", "*")
 		buscar_resenia(w, r, base_datos)
 	})
 
-	//pagina := http.FileServer(http.Dir("./pagina_web"))
-	//http.Handle("/", pagina)
+	pagina := http.FileServer(http.Dir("./pagina_web"))
+	http.Handle("/", pagina)
 
 	//Arrancamos el servidor y escuchamos en el puerto :8080
 	http.ListenAndServe(":8080", nil)
